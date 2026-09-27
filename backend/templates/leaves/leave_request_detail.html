@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Leave Application Details | EELMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card card-stat p-4 mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-3">
+                <h4 class="fw-bold mb-0"><i class="bi bi-file-earmark-text text-primary me-2"></i>Leave Application Details</h4>
+                <a href="{% url 'leave_request_list' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Back to List</a>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded-3 mb-4 border">
+                <div>
+                    <span class="text-muted fs-7 text-uppercase fw-semibold d-block">Application Status</span>
+                    {% if leave_request.status == 'APPROVED' %}
+                        <span class="badge badge-status-approved fs-6 px-3 py-1.5">Approved</span>
+                    {% elif leave_request.status == 'REJECTED' %}
+                        <span class="badge badge-status-rejected fs-6 px-3 py-1.5">Rejected</span>
+                    {% elif leave_request.status == 'PENDING' %}
+                        <span class="badge badge-status-pending fs-6 px-3 py-1.5">Pending Manager Approval</span>
+                    {% else %}
+                        <span class="badge bg-secondary fs-6 px-3 py-1.5">{{ leave_request.get_status_display }}</span>
+                    {% endif %}
+                </div>
+                <div class="text-end">
+                    <span class="text-muted fs-7 text-uppercase fw-semibold d-block">Total Duration</span>
+                    <span class="fw-bold fs-5 text-primary">{{ leave_request.total_days }} Working Days</span>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="text-muted fs-7 text-uppercase fw-semibold d-block">Applicant</label>
+                    <span class="fw-bold text-dark fs-6">{{ leave_request.employee.get_full_name }}</span>
+                    <div class="fs-7 text-muted">{{ leave_request.employee.email }} | {{ leave_request.employee.employee_id }}</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="text-muted fs-7 text-uppercase fw-semibold d-block">Leave Category</label>
+                    <span class="badge bg-primary-subtle text-primary font-monospace fs-6">{{ leave_request.leave_type.code }}</span>
+                    <div class="fw-medium text-dark">{{ leave_request.leave_type.name }}</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="text-muted fs-7 text-uppercase fw-semibold d-block">Start Date</label>
+                    <span class="fw-medium text-dark">{{ leave_request.start_date|date:"F d, Y (l)" }}</span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="text-muted fs-7 text-uppercase fw-semibold d-block">End Date</label>
+                    <span class="fw-medium text-dark">{{ leave_request.end_date|date:"F d, Y (l)" }}</span>
+                </div>
+
+                <div class="col-12">
+                    <label class="text-muted fs-7 text-uppercase fw-semibold d-block">Reason</label>
+                    <div class="p-3 bg-light rounded-3 border text-dark">{{ leave_request.reason }}</div>
+                </div>
+            </div>
+
+            {% if leave_request.manager_comment %}
+                <div class="p-3 bg-warning-subtle border border-warning rounded-3 mb-4">
+                    <strong class="text-warning-emphasis d-block mb-1"><i class="bi bi-chat-square-text me-2"></i>Manager / HR Remarks:</strong>
+                    <div class="text-dark">{{ leave_request.manager_comment }}</div>
+                    {% if leave_request.approved_by %}
+                        <div class="fs-7 text-muted mt-2">Actioned by {{ leave_request.approved_by.get_full_name }} on {{ leave_request.approved_at|date:"M d, Y h:i A" }}</div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <!-- Manager Action Section (If Authorized & Status == PENDING) -->
+            {% if is_authorized_approver and leave_request.status == 'PENDING' %}
+                <div class="card border-primary p-4 bg-primary-subtle">
+                    <h5 class="fw-bold text-primary mb-3"><i class="bi bi-shield-check me-2"></i>Manager Approval Actions</h5>
+                    
+                    <div class="row g-3">
+                        <!-- Approve Form -->
+                        <div class="col-md-6 border-end">
+                            <form method="post" action="{% url 'leave_approve' leave_request.pk %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold fs-7 text-secondary">Optional Approval Remarks</label>
+                                    {{ approve_form.manager_comment }}
+                                </div>
+                                <button type="submit" class="btn btn-success fw-bold w-100 shadow-sm">
+                                    <i class="bi bi-check-circle me-1"></i> Approve Leave Request
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Reject Form -->
+                        <div class="col-md-6">
+                            <form method="post" action="{% url 'leave_reject' leave_request.pk %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold fs-7 text-secondary">Mandatory Rejection Reason *</label>
+                                    {{ reject_form.manager_comment }}
+                                </div>
+                                <button type="submit" class="btn btn-danger fw-bold w-100 shadow-sm">
+                                    <i class="bi bi-x-circle me-1"></i> Reject Leave Request
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

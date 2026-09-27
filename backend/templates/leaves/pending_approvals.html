@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Pending Leave Approvals | EELMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="bi bi-check2-square text-warning me-2"></i>Pending Leave Approvals</h2>
+        <p class="text-muted mb-0">Review and action team leave requests requiring manager authorization.</p>
+    </div>
+    <div>
+        <a href="{% url 'leave_request_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> All Applications</a>
+    </div>
+</div>
+
+<div class="card card-stat overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover table-custom align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Applicant</th>
+                    <th>Category</th>
+                    <th>Leave Dates</th>
+                    <th>Days Requested</th>
+                    <th>Applied On</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in pending_requests %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold text-dark">{{ req.employee.get_full_name }}</div>
+                            <div class="fs-7 text-muted font-monospace">{{ req.employee.employee_id }} | {{ req.employee.department.name }}</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary font-monospace">{{ req.leave_type.code }}</span>
+                            <div class="fs-7 text-muted">{{ req.leave_type.name }}</div>
+                        </td>
+                        <td>
+                            <span class="fw-semibold text-dark">{{ req.start_date|date:"M d, Y" }}</span> to <span class="fw-semibold text-dark">{{ req.end_date|date:"M d, Y" }}</span>
+                        </td>
+                        <td>
+                            <span class="fw-bold text-primary fs-6">{{ req.total_days }} days</span>
+                        </td>
+                        <td>
+                            <span class="fs-7 text-muted">{{ req.created_at|date:"M d, Y h:i A" }}</span>
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'leave_request_detail' req.pk %}" class="btn btn-sm btn-primary fw-bold">
+                                <i class="bi bi-pencil-square me-1"></i> Review Request
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-check-all display-4 text-success d-block mb-2"></i>
+                            Great job! No pending leave approvals awaiting your action right now.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

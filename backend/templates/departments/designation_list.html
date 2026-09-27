@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Designations | EELMS Enterprise{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="bi bi-award text-primary me-2"></i>Designations Management</h2>
+        <p class="text-muted mb-0">Define job roles, job levels, and assigned departments.</p>
+    </div>
+    {% if user.role == 'ADMIN' or user.role == 'HR' %}
+        <div>
+            <a href="{% url 'designation_create' %}" class="btn btn-primary fw-bold shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i> Add New Designation
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Search & Filter Card -->
+<div class="card card-stat p-3 mb-4">
+    <form method="get" class="row g-2 align-items-center">
+        <div class="col-md-6 col-lg-7">
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" name="q" value="{{ search_query }}" class="form-control border-start-0" placeholder="Search designation title...">
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <select name="department" class="form-select">
+                <option value="">All Departments</option>
+                {% for dept in departments %}
+                    <option value="{{ dept.id }}" {% if dept_filter == dept.id|stringformat:'s' %}selected{% endif %}>{{ dept.name }} ({{ dept.code }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-secondary w-100">Filter</button>
+        </div>
+    </form>
+</div>
+
+<!-- Designation Cards Grid -->
+<div class="row g-3">
+    {% for desig in designations %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card card-stat h-100 p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h5 class="fw-bold mb-1 text-dark">{{ desig.name }}</h5>
+                        {% if desig.department %}
+                            <span class="badge bg-primary-subtle text-primary font-monospace">{{ desig.department.name }} ({{ desig.department.code }})</span>
+                        {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary">General Designation</span>
+                        {% endif %}
+                    </div>
+                    {% if user.role == 'ADMIN' or user.role == 'HR' %}
+                        <div class="dropdown">
+                            <button class="btn btn-link text-muted p-0" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                <li><a class="dropdown-item" href="{% url 'designation_edit' desig.pk %}"><i class="bi bi-pencil me-2"></i>Edit</a></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'designation_delete' desig.pk %}"><i class="bi bi-trash me-2"></i>Delete</a></li>
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+                {% if desig.description %}
+                    <p class="fs-7 text-muted mb-0 mt-2 text-truncate-3">{{ desig.description }}</p>
+                {% else %}
+                    <p class="fs-7 text-muted mb-0 mt-2 fst-italic">No detailed description provided.</p>
+                {% endif %}
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12 text-center py-5 text-muted">
+            <i class="bi bi-inbox display-4 d-block mb-2"></i>
+            No designations found.
+        </div>
+    {% endfor %}
+</div>
+
+{% include 'components/pagination.html' %}
+{% endblock %}

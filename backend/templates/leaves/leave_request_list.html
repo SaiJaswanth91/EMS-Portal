@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Leave Applications | EELMS Enterprise{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="bi bi-calendar-event text-primary me-2"></i>Leave Applications</h2>
+        <p class="text-muted mb-0">Apply for leave, track request statuses, and manage balances.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'leave_balance_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-pie-chart me-1"></i> My Leave Balances
+        </a>
+        <a href="{% url 'leave_apply' %}" class="btn btn-primary fw-bold shadow-sm">
+            <i class="bi bi-plus-lg me-1"></i> Apply for Leave
+        </a>
+        {% if user.role == 'ADMIN' or user.role == 'HR' %}
+            <a href="{% url 'leave_type_list' %}" class="btn btn-outline-primary">
+                <i class="bi bi-gear me-1"></i> Leave Types Config
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Search & Filter Card -->
+<div class="card card-stat p-3 mb-4">
+    <form method="get" class="row g-2 align-items-center">
+        {% if user.role != 'EMPLOYEE' %}
+            <div class="col-md-4">
+                <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search employee name or ID...">
+            </div>
+        {% endif %}
+        <div class="col-md-3">
+            <select name="type" class="form-select">
+                <option value="">All Leave Types</option>
+                {% for lt in leave_types %}
+                    <option value="{{ lt.id }}" {% if type_filter == lt.id|stringformat:'s' %}selected{% endif %}>{{ lt.name }} ({{ lt.code }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="status" class="form-select">
+                <option value="">All Statuses</option>
+                {% for code, label in statuses %}
+                    <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-secondary w-100"><i class="bi bi-funnel me-1"></i> Filter</button>
+        </div>
+    </form>
+</div>
+
+<!-- Leave Requests Table -->
+<div class="card card-stat overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover table-custom align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Applied By</th>
+                    <th>Leave Category</th>
+                    <th>Date Range</th>
+                    <th>Total Days</th>
+                    <th>Status</th>
+                    <th>Applied On</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in leave_requests %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold text-dark">{{ req.employee.get_full_name }}</div>
+                            <div class="fs-7 text-muted font-monospace">{{ req.employee.employee_id }}</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary font-monospace">{{ req.leave_type.code }}</span>
+                            <div class="fs-7 text-muted">{{ req.leave_type.name }}</div>
+                        </td>
+                        <td>
+                            <span class="fw-semibold text-dark">{{ req.start_date|date:"M d, Y" }}</span> to <span class="fw-semibold text-dark">{{ req.end_date|date:"M d, Y" }}</span>
+                        </td>
+                        <td>
+                            <span class="fw-bold text-primary">{{ req.total_days }} days</span>
+                        </td>
+                        <td>
+                            {% if req.status == 'APPROVED' %}
+                                <span class="badge badge-status-approved">Approved</span>
+                            {% elif req.status == 'REJECTED' %}
+                                <span class="badge badge-status-rejected">Rejected</span>
+                            {% elif req.status == 'PENDING' %}
+                                <span class="badge badge-status-pending">Pending Manager Approval</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ req.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="fs-7 text-muted">{{ req.created_at|date:"M d, Y" }}</span>
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'leave_request_detail' req.pk %}" class="btn btn-sm btn-outline-primary" title="View Application Details">
+                                <i class="bi bi-eye me-1"></i> Details
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-calendar-x display-4 d-block mb-2"></i>
+                            No leave applications found.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'components/pagination.html' %}
+{% endblock %}

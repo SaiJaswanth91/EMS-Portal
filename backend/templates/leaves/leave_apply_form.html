@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Apply for Leave | EELMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card card-stat p-4">
+            <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-3">
+                <h4 class="fw-bold mb-0"><i class="bi bi-calendar-plus text-primary me-2"></i>Apply for Leave</h4>
+                <a href="{% url 'leave_request_list' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Back to Directory</a>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger shadow-sm mb-4">
+                        <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                        {% for err in form.non_field_errors %}
+                            {{ err }}<br>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label for="id_leave_type" class="form-label fw-semibold">Leave Category <span class="text-danger">*</span></label>
+                        {{ form.leave_type }}
+                        {% if form.leave_type.errors %}
+                            <div class="text-danger fs-7 mt-1">{{ form.leave_type.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="id_start_date" class="form-label fw-semibold">Start Date <span class="text-danger">*</span></label>
+                        {{ form.start_date }}
+                        {% if form.start_date.errors %}
+                            <div class="text-danger fs-7 mt-1">{{ form.start_date.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="id_end_date" class="form-label fw-semibold">End Date <span class="text-danger">*</span></label>
+                        {{ form.end_date }}
+                        {% if form.end_date.errors %}
+                            <div class="text-danger fs-7 mt-1">{{ form.end_date.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-12">
+                        <label for="id_reason" class="form-label fw-semibold">Reason for Application <span class="text-danger">*</span></label>
+                        {{ form.reason }}
+                        {% if form.reason.errors %}
+                            <div class="text-danger fs-7 mt-1">{{ form.reason.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-12 mt-4 pt-3 border-top d-flex gap-2 justify-content-end">
+                        <a href="{% url 'leave_request_list' %}" class="btn btn-light px-4">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">
+                            <i class="bi bi-send me-1"></i> Submit Application
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

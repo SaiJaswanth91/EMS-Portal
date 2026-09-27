@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance Directory | EELMS Enterprise{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="bi bi-clock-history text-primary me-2"></i>Attendance Management</h2>
+        <p class="text-muted mb-0">Track daily clock-in/out timestamps, working hours, and status logs.</p>
+    </div>
+    {% if user.role == 'ADMIN' or user.role == 'HR' or user.role == 'MANAGER' %}
+        <div>
+            <a href="{% url 'team_attendance' %}" class="btn btn-outline-primary fw-bold shadow-sm">
+                <i class="bi bi-people-fill me-1"></i> View Team Attendance Today
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Clock-In / Clock-Out Interactive Card -->
+<div class="row mb-4">
+    <div class="col-lg-8 mx-auto">
+        <div class="card card-stat bg-white border-primary border-2 p-4 text-center">
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mb-3">
+                <div class="text-sm-start mb-2 mb-sm-0">
+                    <span class="text-uppercase fs-7 text-muted fw-bold">Today's Date</span>
+                    <h5 class="fw-bold text-dark mb-0">{{ today_date|date:"EEEE, F d, Y" }}</h5>
+                </div>
+                <div>
+                    {% if today_attendance %}
+                        {% if today_attendance.clock_out_time %}
+                            <span class="badge bg-secondary fs-6 px-3 py-2">Shift Completed Today</span>
+                        {% elif today_attendance.clock_in_time %}
+                            <span class="badge badge-status-present fs-6 px-3 py-2"><i class="bi bi-play-circle me-1"></i>Clocked In (Active)</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge bg-warning-subtle text-warning fs-6 px-3 py-2"><i class="bi bi-exclamation-circle me-1"></i>Not Clocked In Yet</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <hr class="my-3">
+
+            <div class="row align-items-center g-3">
+                <div class="col-sm-6 border-end">
+                    <div class="p-2">
+                        <span class="text-muted fs-7 text-uppercase fw-semibold d-block">Clock In Time</span>
+                        <h4 class="fw-bold text-primary mb-2">
+                            {% if today_attendance and today_attendance.clock_in_time %}
+                                {{ today_attendance.clock_in_time|time:"h:i A" }}
+                            {% else %}
+                                --:-- --
+                            {% endif %}
+                        </h4>
+                        {% if not today_attendance or not today_attendance.clock_in_time %}
+                            <form method="post" action="{% url 'clock_in' %}" class="d-inline-block w-100">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-lg w-100 fw-bold shadow-sm">
+                                    <i class="bi bi-box-arrow-in-right me-2"></i> Clock In Now
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-sm-6">
+                    <div class="p-2">
+                        <span class="text-muted fs-7 text-uppercase fw-semibold d-block">Clock Out Time</span>
+                        <h4 class="fw-bold text-danger mb-2">
+                            {% if today_attendance and today_attendance.clock_out_time %}
+                                {{ today_attendance.clock_out_time|time:"h:i A" }}
+                            {% else %}
+                                --:-- --
+                            {% endif %}
+                        </h4>
+                        {% if today_attendance and today_attendance.clock_in_time and not today_attendance.clock_out_time %}
+                            <form method="post" action="{% url 'clock_out' %}" class="d-inline-block w-100">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-lg w-100 fw-bold shadow-sm">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Clock Out Now
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {% if today_attendance and today_attendance.working_hours > 0 %}
+                <div class="mt-3 pt-3 border-top text-muted fs-7">
+                    Total Hours Recorded Today: <strong class="text-dark">{{ today_attendance.working_hours }} hours</strong>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Filter Toolbar -->
+<div class="card card-stat p-3 mb-4">
+    <form method="get" class="row g-2 align-items-center">
+        {% if user.role != 'EMPLOYEE' %}
+            <div class="col-md-3">
+                <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search employee name/ID...">
+            </div>
+            <div class="col-md-3">
+                <select name="department" class="form-select">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept.id }}" {% if dept_filter == dept.id|stringformat:'s' %}selected{% endif %}>{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        {% endif %}
+        <div class="col-md-2">
+            <input type="date" name="start_date" value="{{ start_date }}" class="form-control" placeholder="Start Date">
+        </div>
+        <div class="col-md-2">
+            <input type="date" name="end_date" value="{{ end_date }}" class="form-control" placeholder="End Date">
+        </div>
+        <div class="col-md-2">
+            <select name="status" class="form-select">
+                <option value="">All Statuses</option>
+                {% for code, label in statuses %}
+                    <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-1">
+            <button type="submit" class="btn btn-secondary w-100"><i class="bi bi-funnel"></i></button>
+        </div>
+    </form>
+</div>
+
+<!-- Attendance Logs Table -->
+<div class="card card-stat overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover table-custom align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Employee</th>
+                    <th>Clock In</th>
+                    <th>Clock Out</th>
+                    <th>Working Hours</th>
+                    <th>Status</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for att in attendances %}
+                    <tr>
+                        <td class="fw-semibold text-dark">{{ att.date|date:"Y-m-d (D)" }}</td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ att.employee.get_full_name }}</div>
+                            <div class="fs-7 text-muted font-monospace">{{ att.employee.employee_id }}</div>
+                        </td>
+                        <td>
+                            {% if att.clock_in_time %}
+                                <span class="badge bg-light text-dark border"><i class="bi bi-clock me-1"></i>{{ att.clock_in_time|time:"h:i A" }}</span>
+                            {% else %}
+                                <span class="text-muted fs-7">--:--</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if att.clock_out_time %}
+                                <span class="badge bg-light text-dark border"><i class="bi bi-clock-history me-1"></i>{{ att.clock_out_time|time:"h:i A" }}</span>
+                            {% else %}
+                                <span class="text-muted fs-7">--:--</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="fw-bold text-primary">{{ att.working_hours }} hrs</span>
+                        </td>
+                        <td>
+                            {% if att.status == 'PRESENT' %}
+                                <span class="badge badge-status-present">Present</span>
+                            {% elif att.status == 'LATE' %}
+                                <span class="badge badge-status-late">Late</span>
+                            {% elif att.status == 'HALF_DAY' %}
+                                <span class="badge bg-warning text-dark">Half Day</span>
+                            {% else %}
+                                <span class="badge badge-status-absent">{{ att.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="fs-7 text-muted">{{ att.notes|default:"-" }}</span>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-calendar-x display-4 d-block mb-2"></i>
+                            No attendance records found matching your filters.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'components/pagination.html' %}
+{% endblock %}

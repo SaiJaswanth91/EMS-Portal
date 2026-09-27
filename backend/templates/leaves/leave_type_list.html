@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Leave Types Configuration | EELMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="bi bi-gear text-primary me-2"></i>Leave Types Configuration</h2>
+        <p class="text-muted mb-0">Manage corporate leave categories, quotas, and paid/unpaid rules.</p>
+    </div>
+    {% if user.role == 'ADMIN' or user.role == 'HR' %}
+        <div>
+            <a href="{% url 'leave_type_create' %}" class="btn btn-primary fw-bold shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i> Add Leave Type
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<div class="card card-stat overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover table-custom align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Leave Code</th>
+                    <th>Name</th>
+                    <th>Paid Status</th>
+                    <th>Max Days / Year</th>
+                    <th>Requires Document</th>
+                    <th>Status</th>
+                    {% if user.role == 'ADMIN' or user.role == 'HR' %}
+                        <th class="text-end">Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for lt in leave_types %}
+                    <tr>
+                        <td><span class="badge bg-primary-subtle text-primary font-monospace fs-6 px-2.5 py-1.5">{{ lt.code }}</span></td>
+                        <td class="fw-bold text-dark">{{ lt.name }}</td>
+                        <td>
+                            {% if lt.is_paid %}
+                                <span class="badge bg-success-subtle text-success">Paid</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary">Unpaid</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="fw-bold text-primary">{{ lt.max_days_per_year }} days</span></td>
+                        <td>
+                            {% if lt.requires_document %}
+                                <span class="badge bg-warning-subtle text-warning">Yes (Required)</span>
+                            {% else %}
+                                <span class="text-muted fs-7">No</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if lt.status %}
+                                <span class="badge badge-status-present">Active</span>
+                            {% else %}
+                                <span class="badge badge-status-absent">Inactive</span>
+                            {% endif %}
+                        </td>
+                        {% if user.role == 'ADMIN' or user.role == 'HR' %}
+                            <td class="text-end">
+                                <a href="{% url 'leave_type_edit' lt.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil me-1"></i> Edit</a>
+                            </td>
+                        {% endif %}
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">No leave types configured.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

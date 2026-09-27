@@ -1,0 +1,19 @@
+/* Form-specific styling */
+.form-card {
+    background: white;
+    border-radius: 0.75rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    padding: 2rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #334155;
+    font-size: 0.875rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}

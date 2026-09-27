@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: eelms_postgres
+    environment:
+      POSTGRES_DB: eelms_db
+      POSTGRES_USER: eelms_user
+      POSTGRES_PASSWORD: eelms_secure_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: eelms_redis
+    ports:
+      - "6379:6379"
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: eelms_web
+    command: python backend/manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - USE_POSTGRES=True
+      - DATABASE_NAME=eelms_db
+      - DATABASE_USER=eelms_user
+      - DATABASE_PASSWORD=eelms_secure_password
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: eelms_celery_worker
+    command: celery -A config worker -l info --workdir backend
+    volumes:
+      - .:/app
+    environment:
+      - USE_POSTGRES=True
+      - DATABASE_NAME=eelms_db
+      - DATABASE_USER=eelms_user
+      - DATABASE_PASSWORD=eelms_secure_password
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - web
+      - redis
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: eelms_celery_beat
+    command: celery -A config beat -l info --workdir backend
+    volumes:
+      - .:/app
+    environment:
+      - USE_POSTGRES=True
+      - DATABASE_NAME=eelms_db
+      - DATABASE_USER=eelms_user
+      - DATABASE_PASSWORD=eelms_secure_password
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - web
+      - redis
+
+volumes:
+  postgres_data:

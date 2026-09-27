@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Edit Department{% else %}Create Department{% endif %} | EELMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card card-stat p-4">
+            <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-3">
+                <h4 class="fw-bold mb-0">
+                    <i class="bi {% if object %}bi-pencil-square{% else %}bi-plus-circle{% endif %} text-primary me-2"></i>
+                    {% if object %}Edit Department: {{ object.name }}{% else %}Add New Department{% endif %}
+                </h4>
+                <a href="{% url 'department_list' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Back to List
+                </a>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label for="id_name" class="form-label fw-semibold">Department Name <span class="text-danger">*</span></label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="text-danger fs-7 mt-1">{{ form.name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="id_code" class="form-label fw-semibold">Short Code <span class="text-danger">*</span></label>
+                        {{ form.code }}
+                        <div class="form-text fs-7">Unique uppercase code (e.g., TECH).</div>
+                        {% if form.code.errors %}
+                            <div class="text-danger fs-7 mt-1">{{ form.code.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-12">
+                        <label for="id_department_head" class="form-label fw-semibold">Department Head</label>
+                        {{ form.department_head }}
+                        {% if form.department_head.errors %}
+                            <div class="text-danger fs-7 mt-1">{{ form.department_head.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-12">
+                        <label for="id_description" class="form-label fw-semibold">Description</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger fs-7 mt-1">{{ form.description.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-check form-switch mt-2">
+                            {{ form.status }}
+                            <label for="id_status" class="form-check-label fw-semibold ms-2">Active Department Status</label>
+                        </div>
+                    </div>
+
+                    <div class="col-12 mt-4 pt-3 border-top d-flex gap-2 justify-content-end">
+                        <a href="{% url 'department_list' %}" class="btn btn-light px-4">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">
+                            <i class="bi bi-check-lg me-1"></i> Save Department
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

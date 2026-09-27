@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sign In | EELMS Enterprise{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center py-4" style="min-height: 75vh;">
+    <div class="col-11 col-sm-9 col-md-7 col-lg-5 col-xl-4">
+        <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+            <div class="card-header bg-primary text-white text-center py-4 border-0">
+                <div class="mb-2">
+                    <i class="bi bi-building-lock display-4"></i>
+                </div>
+                <h3 class="fw-bold mb-1">EELMS Enterprise</h3>
+                <p class="mb-0 text-white-50 fs-7">Sign in to your corporate portal</p>
+            </div>
+            
+            <div class="card-body p-4 p-sm-5">
+                <form method="post" action="{% url 'login' %}" novalidate>
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label fw-semibold text-secondary fs-7">Work Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted"><i class="bi bi-envelope"></i></span>
+                            {{ form.username }}
+                        </div>
+                        {% if form.username.errors %}
+                            <div class="text-danger fs-7 mt-1">{{ form.username.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="id_password" class="form-label fw-semibold text-secondary fs-7 mb-0">Password</label>
+                            <a href="{% url 'password_reset' %}" class="fs-7 text-primary text-decoration-none fw-medium">Forgot password?</a>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted"><i class="bi bi-lock"></i></span>
+                            {{ form.password }}
+                        </div>
+                        {% if form.password.errors %}
+                            <div class="text-danger fs-7 mt-1">{{ form.password.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg fw-bold rounded-3 shadow-sm py-2">
+                            <i class="bi bi-box-arrow-in-right me-2"></i> Log In
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mt-4 pt-3 border-top text-center">
+                    <p class="text-muted fs-7 mb-2 fw-semibold"><i class="bi bi-info-circle me-1"></i>Demo Logins (Click to Autofill):</p>
+                    <div class="d-flex flex-column gap-2 text-start fs-7">
+                        <button type="button" class="btn btn-outline-primary btn-sm text-start d-flex justify-content-between align-items-center rounded-3 p-2" onclick="fillDemoCredentials('admin@eelms.com', 'Admin@123')">
+                            <span><span class="badge badge-role-admin me-1">Admin</span> admin@eelms.com</span>
+                            <span class="text-muted font-monospace">Admin@123</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-sm text-start d-flex justify-content-between align-items-center rounded-3 p-2" onclick="fillDemoCredentials('hr@eelms.com', 'Hr@123')">
+                            <span><span class="badge badge-role-hr me-1">HR</span> hr@eelms.com</span>
+                            <span class="text-muted font-monospace">Hr@123</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-info btn-sm text-start d-flex justify-content-between align-items-center rounded-3 p-2" onclick="fillDemoCredentials('manager1@eelms.com', 'Manager@123')">
+                            <span><span class="badge badge-role-manager me-1">Manager</span> manager1@eelms.com</span>
+                            <span class="text-muted font-monospace">Manager@123</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm text-start d-flex justify-content-between align-items-center rounded-3 p-2" onclick="fillDemoCredentials('employee1@eelms.com', 'Employee@123')">
+                            <span><span class="badge badge-role-employee me-1">Employee</span> employee1@eelms.com</span>
+                            <span class="text-muted font-monospace">Employee@123</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function fillDemoCredentials(email, password) {
+    const emailField = document.getElementById('id_username');
+    const passwordField = document.getElementById('id_password');
+    if (emailField) emailField.value = email;
+    if (passwordField) passwordField.value = password;
+}
+</script>
+{% endblock %}

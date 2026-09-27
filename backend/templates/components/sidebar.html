@@ -1,0 +1,55 @@
+{% load static %}
+<div id="sidebar-wrapper">
+    <div class="sidebar-heading d-flex align-items-center gap-2">
+        <i class="bi bi-building-gear text-primary fs-4"></i>
+        <span>EELMS Portal</span>
+    </div>
+    <div class="list-group list-group-flush my-2">
+        <a href="{% url 'dashboard' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'home' %}active{% endif %}">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+
+        <div class="px-3 pt-3 pb-1 text-uppercase fs-7 fw-bold text-muted">Organization</div>
+        <a href="{% url 'department_list' %}" class="list-group-item list-group-item-action {% if 'department' in request.path and 'designation' not in request.path %}active{% endif %}">
+            <i class="bi bi-diagram-3"></i> Departments
+        </a>
+        <a href="{% url 'designation_list' %}" class="list-group-item list-group-item-action {% if 'designation' in request.path %}active{% endif %}">
+            <i class="bi bi-award"></i> Designations
+        </a>
+        <a href="{% url 'employee_list' %}" class="list-group-item list-group-item-action {% if 'employee' in request.path %}active{% endif %}">
+            <i class="bi bi-people"></i> Employees
+        </a>
+
+        <div class="px-3 pt-3 pb-1 text-uppercase fs-7 fw-bold text-muted">Workplace</div>
+        <a href="{% url 'attendance_list' %}" class="list-group-item list-group-item-action {% if 'attendance' in request.path %}active{% endif %}">
+            <i class="bi bi-clock-history"></i> Attendance
+        </a>
+        <a href="{% url 'leave_request_list' %}" class="list-group-item list-group-item-action {% if 'leaves' in request.path and 'pending' not in request.path %}active{% endif %}">
+            <i class="bi bi-calendar-event"></i> Leave Applications
+        </a>
+        {% if user.role == 'ADMIN' or user.role == 'HR' or user.role == 'MANAGER' %}
+            <a href="{% url 'pending_approvals' %}" class="list-group-item list-group-item-action {% if 'pending' in request.path %}active{% endif %}">
+                <i class="bi bi-check2-square text-warning"></i> Pending Approvals
+            </a>
+        {% endif %}
+        <a href="#" class="list-group-item list-group-item-action">
+            <i class="bi bi-file-earmark-lock"></i> My Documents
+        </a>
+
+        {% if user.role == 'ADMIN' or user.role == 'HR' or user.role == 'MANAGER' %}
+            <div class="px-3 pt-3 pb-1 text-uppercase fs-7 fw-bold text-muted">Reports & Audit</div>
+            <a href="#" class="list-group-item list-group-item-action">
+                <i class="bi bi-bar-chart-line"></i> Analytics & Reports
+            </a>
+        {% endif %}
+
+        {% if user.role == 'ADMIN' %}
+            <a href="#" class="list-group-item list-group-item-action">
+                <i class="bi bi-journal-check"></i> Audit Logs
+            </a>
+            <a href="#" class="list-group-item list-group-item-action">
+                <i class="bi bi-sliders"></i> System Settings
+            </a>
+        {% endif %}
+    </div>
+</div>

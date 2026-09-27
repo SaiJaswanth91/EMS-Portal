@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Designation | EELMS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-md-6">
+        <div class="card card-stat border-danger p-4 text-center">
+            <div class="mb-3">
+                <i class="bi bi-exclamation-triangle-fill text-danger display-3"></i>
+            </div>
+            <h4 class="fw-bold mb-2">Delete Designation</h4>
+            <p class="text-muted mb-4">
+                Are you sure you want to delete designation <strong class="text-dark">{{ object.name }}</strong>?
+                This action cannot be undone.
+            </p>
+            <form method="post" class="d-flex justify-content-center gap-3">
+                {% csrf_token %}
+                <a href="{% url 'designation_list' %}" class="btn btn-secondary px-4">Cancel</a>
+                <button type="submit" class="btn btn-danger px-4 fw-bold">Confirm Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

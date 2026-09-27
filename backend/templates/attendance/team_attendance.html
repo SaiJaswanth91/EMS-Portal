@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Team Attendance Today | EELMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="bi bi-people-fill text-primary me-2"></i>Today's Team Attendance Dashboard</h2>
+        <p class="text-muted mb-0">Live attendance monitoring for {{ today_date|date:"F d, Y" }}.</p>
+    </div>
+    <div>
+        <a href="{% url 'attendance_list' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> Attendance Directory</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card card-stat p-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted fs-7 text-uppercase fw-semibold">Total Team Staff</span>
+                    <h3 class="fw-bold mb-0 mt-1">{{ total_team }}</h3>
+                </div>
+                <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-people"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-stat p-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted fs-7 text-uppercase fw-semibold">Clocked In / Present</span>
+                    <h3 class="fw-bold mb-0 mt-1 text-success">{{ present_count }}</h3>
+                </div>
+                <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-check-circle-fill"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-stat p-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted fs-7 text-uppercase fw-semibold">Not Clocked In / Absent</span>
+                    <h3 class="fw-bold mb-0 mt-1 text-danger">{{ absent_count }}</h3>
+                </div>
+                <div class="stat-icon bg-danger-subtle text-danger"><i class="bi bi-x-circle-fill"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card card-stat overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover table-custom align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Employee Name</th>
+                    <th>Department & Designation</th>
+                    <th>Clock In Time</th>
+                    <th>Clock Out Time</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for att in attendances %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold text-dark">{{ att.employee.get_full_name }}</div>
+                            <div class="fs-7 text-muted font-monospace">{{ att.employee.employee_id }}</div>
+                        </td>
+                        <td>
+                            <div class="fw-medium text-dark">{{ att.employee.department.name }}</div>
+                            <div class="fs-7 text-muted">{{ att.employee.designation.name|default:"General" }}</div>
+                        </td>
+                        <td>
+                            {% if att.clock_in_time %}
+                                <span class="badge bg-light text-dark border">{{ att.clock_in_time|time:"h:i A" }}</span>
+                            {% else %}
+                                <span class="text-muted fs-7">Not clocked in</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if att.clock_out_time %}
+                                <span class="badge bg-light text-dark border">{{ att.clock_out_time|time:"h:i A" }}</span>
+                            {% else %}
+                                <span class="text-muted fs-7">Active</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if att.status == 'PRESENT' %}
+                                <span class="badge badge-status-present">Present</span>
+                            {% elif att.status == 'LATE' %}
+                                <span class="badge badge-status-late">Late</span>
+                            {% else %}
+                                <span class="badge badge-status-absent">{{ att.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="bi bi-clock display-4 d-block mb-2"></i>
+                            No team attendance records logged for today yet.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

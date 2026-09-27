@@ -1,0 +1,23 @@
+/* Dashboard-specific styling */
+.welcome-banner {
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    color: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 15px -3px rgba(30, 58, 138, 0.2);
+}
+
+.welcome-banner h1 {
+    font-weight: 700;
+    font-size: 1.75rem;
+}
+
+.quick-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+}

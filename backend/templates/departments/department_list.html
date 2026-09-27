@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}Departments | EELMS Enterprise{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="bi bi-diagram-3 text-primary me-2"></i>Departments Management</h2>
+        <p class="text-muted mb-0">Organize company departments, codes, and department heads.</p>
+    </div>
+    {% if user.role == 'ADMIN' or user.role == 'HR' %}
+        <div>
+            <a href="{% url 'department_create' %}" class="btn btn-primary fw-bold shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i> Add New Department
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Stats Row -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-md-4">
+        <div class="card card-stat p-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted fs-7 text-uppercase fw-semibold">Total Departments</span>
+                    <h3 class="fw-bold mb-0 mt-1">{{ total_departments }}</h3>
+                </div>
+                <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-building"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-4">
+        <div class="card card-stat p-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted fs-7 text-uppercase fw-semibold">Active Departments</span>
+                    <h3 class="fw-bold mb-0 mt-1">{{ active_departments }}</h3>
+                </div>
+                <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-check-circle-fill"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search & Filter Card -->
+<div class="card card-stat p-3 mb-4">
+    <form method="get" class="row g-2 align-items-center">
+        <div class="col-md-6 col-lg-7">
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" name="q" value="{{ search_query }}" class="form-control border-start-0" placeholder="Search department by name or code...">
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-3">
+            <select name="status" class="form-select">
+                <option value="">All Statuses</option>
+                <option value="true" {% if status_filter == 'true' %}selected{% endif %}>Active Only</option>
+                <option value="false" {% if status_filter == 'false' %}selected{% endif %}>Inactive Only</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-secondary w-100">Filter</button>
+        </div>
+    </form>
+</div>
+
+<!-- Department Table -->
+<div class="card card-stat overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover table-custom align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Department Code</th>
+                    <th>Department Name</th>
+                    <th>Department Head</th>
+                    <th>Designations Count</th>
+                    <th>Status</th>
+                    {% if user.role == 'ADMIN' or user.role == 'HR' %}
+                        <th class="text-end">Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for dept in departments %}
+                    <tr>
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary font-monospace fs-6 px-2.5 py-1.5">{{ dept.code }}</span>
+                        </td>
+                        <td>
+                            <span class="fw-semibold text-dark">{{ dept.name }}</span>
+                            {% if dept.description %}
+                                <div class="fs-7 text-muted text-truncate" style="max-width: 250px;">{{ dept.description }}</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if dept.department_head %}
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-person-badge text-secondary fs-5"></i>
+                                    <div>
+                                        <div class="fw-medium text-dark fs-7">{{ dept.department_head.get_full_name }}</div>
+                                        <div class="fs-7 text-muted">{{ dept.department_head.email }}</div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <span class="text-muted fs-7">Unassigned</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary rounded-pill px-3">{{ dept.designation_count }} Designations</span>
+                        </td>
+                        <td>
+                            {% if dept.status %}
+                                <span class="badge badge-status-present">Active</span>
+                            {% else %}
+                                <span class="badge badge-status-absent">Inactive</span>
+                            {% endif %}
+                        </td>
+                        {% if user.role == 'ADMIN' or user.role == 'HR' %}
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-1">
+                                    <form method="post" action="{% url 'department_toggle_status' dept.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm {% if dept.status %}btn-outline-warning{% else %}btn-outline-success{% endif %}" title="Toggle Active Status">
+                                            <i class="bi {% if dept.status %}bi-pause-circle{% else %}bi-play-circle{% endif %}"></i>
+                                        </button>
+                                    </form>
+                                    <a href="{% url 'department_edit' dept.pk %}" class="btn btn-sm btn-outline-primary" title="Edit Department">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'department_delete' dept.pk %}" class="btn btn-sm btn-outline-danger" title="Delete Department">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        {% endif %}
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                            No departments found matching your filter criteria.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% include 'components/pagination.html' %}
+{% endblock %}
