@@ -69,3 +69,4 @@ jobs:
         DATABASE_PORT: 5432
       run: |
         pytest backend/tests/
+        

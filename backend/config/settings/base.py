@@ -80,27 +80,139 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
 
-# Database Configuration (PostgreSQL with SQLite fallback if Postgres is unavailable)
-USE_POSTGRES = os.getenv('USE_POSTGRES', 'False').lower() in ('true', '1', 'yes')
+# Database Configuration (PostgreSQL with SQLite fallback)
+from urllib.parse import urlparse, parse_qs, unquote
 
-if USE_POSTGRES:
-    DATABASES = {
-        'default': {
+
+def _get_postgres_sslmode(host):
+    """Return sslmode='require' for remote hosts unless explicitly overridden by environment variable."""
+    sslmode_env = os.getenv('DATABASE_SSLMODE', os.getenv('PGSSLMODE', os.getenv('POSTGRES_SSLMODE', ''))).strip()
+    if sslmode_env:
+        return sslmode_env
+    if host and host.lower() not in ('localhost', '127.0.0.1', '0.0.0.0', 'db'):
+        return 'require'
+    return None
+
+
+database_url = os.getenv('DATABASE_URL', os.getenv('POSTGRES_URL', '')).strip()
+pg_host = os.getenv('PGHOST', '').strip()
+pg_db = os.getenv('PGDATABASE', '').strip()
+postgres_host = os.getenv('POSTGRES_HOST', '').strip()
+postgres_db = os.getenv('POSTGRES_DB', os.getenv('POSTGRES_DATABASE', '')).strip()
+use_postgres_flag = os.getenv('USE_POSTGRES', 'False').lower() in ('true', '1', 'yes')
+
+db_config = None
+
+# Priority 1: DATABASE_URL / POSTGRES_URL
+if database_url:
+    parsed_url = urlparse(database_url)
+    if parsed_url.scheme in ('postgres', 'postgresql'):
+        db_name = unquote(parsed_url.path.lstrip('/'))
+        db_user = unquote(parsed_url.username) if parsed_url.username else ''
+        db_password = unquote(parsed_url.password) if parsed_url.password else ''
+        db_host = parsed_url.hostname or ''
+        db_port = str(parsed_url.port) if parsed_url.port else ''
+
+        options = {}
+        query_params = parse_qs(parsed_url.query)
+        if 'sslmode' in query_params:
+            options['sslmode'] = query_params['sslmode'][0]
+        else:
+            sslmode = _get_postgres_sslmode(db_host)
+            if sslmode:
+                options['sslmode'] = sslmode
+
+        db_config = {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DATABASE_NAME', 'eelms_db'),
-            'USER': os.getenv('DATABASE_USER', 'postgres'),
-            'PASSWORD': os.getenv('DATABASE_PASSWORD', 'postgres'),
-            'HOST': os.getenv('DATABASE_HOST', 'localhost'),
-            'PORT': os.getenv('DATABASE_PORT', '5432'),
+            'NAME': db_name,
+            'USER': db_user,
+            'PASSWORD': db_password,
+            'HOST': db_host,
+            'PORT': db_port,
         }
+        if options:
+            db_config['OPTIONS'] = options
+
+# Priority 2: PG* variables
+if not db_config and (pg_host or pg_db):
+    db_host = pg_host or 'localhost'
+    db_port = os.getenv('PGPORT', '5432').strip()
+    db_user = os.getenv('PGUSER', 'postgres').strip()
+    db_password = os.getenv('PGPASSWORD', '').strip()
+    db_name = pg_db or 'eelms_db'
+
+    options = {}
+    sslmode = _get_postgres_sslmode(db_host)
+    if sslmode:
+        options['sslmode'] = sslmode
+
+    db_config = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': db_name,
+        'USER': db_user,
+        'PASSWORD': db_password,
+        'HOST': db_host,
+        'PORT': db_port,
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
+    if options:
+        db_config['OPTIONS'] = options
+
+# Priority 3: POSTGRES_* variables
+if not db_config and (postgres_host or postgres_db):
+    db_host = postgres_host or 'localhost'
+    db_port = os.getenv('POSTGRES_PORT', '5432').strip()
+    db_user = os.getenv('POSTGRES_USER', 'postgres').strip()
+    db_password = os.getenv('POSTGRES_PASSWORD', '').strip()
+    db_name = postgres_db or 'eelms_db'
+
+    options = {}
+    sslmode = _get_postgres_sslmode(db_host)
+    if sslmode:
+        options['sslmode'] = sslmode
+
+    db_config = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': db_name,
+        'USER': db_user,
+        'PASSWORD': db_password,
+        'HOST': db_host,
+        'PORT': db_port,
     }
+    if options:
+        db_config['OPTIONS'] = options
+
+# Priority 4: Existing USE_POSTGRES=True + DATABASE_* variables
+if not db_config and use_postgres_flag:
+    db_host = os.getenv('DATABASE_HOST', 'localhost').strip()
+    db_port = os.getenv('DATABASE_PORT', '5432').strip()
+    db_user = os.getenv('DATABASE_USER', 'postgres').strip()
+    db_password = os.getenv('DATABASE_PASSWORD', 'postgres').strip()
+    db_name = os.getenv('DATABASE_NAME', 'eelms_db').strip()
+
+    options = {}
+    sslmode = _get_postgres_sslmode(db_host)
+    if sslmode:
+        options['sslmode'] = sslmode
+
+    db_config = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': db_name,
+        'USER': db_user,
+        'PASSWORD': db_password,
+        'HOST': db_host,
+        'PORT': db_port,
+    }
+    if options:
+        db_config['OPTIONS'] = options
+
+# Priority 5: SQLite fallback
+if not db_config:
+    db_config = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+
+DATABASES = {'default': db_config}
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
