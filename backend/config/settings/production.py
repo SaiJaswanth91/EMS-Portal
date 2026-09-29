@@ -3,7 +3,7 @@ from .base import *
 DEBUG = False
 
 # Strict host headers in production
-allowed_hosts_raw = os.getenv('DJANGO_ALLOWED_HOSTS', os.getenv('ALLOWED_HOSTS', ''))
+allowed_hosts_raw = os.getenv('DJANGO_ALLOWED_HOSTS', os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1'))
 ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_raw.split(',') if host.strip()]
 
 # CSRF Trusted Origins in production

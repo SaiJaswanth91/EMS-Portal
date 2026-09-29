@@ -4,129 +4,401 @@
 {% block title %}Dashboard | EELMS{% endblock %}
 
 {% block content %}
+<!-- Welcome Banner -->
 <div class="welcome-banner">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
         <div>
-            <h1>Welcome to EELMS Enterprise System</h1>
-            <p class="mb-0 text-white-50">Enterprise Employee & Leave Management System — Phase 1 Operational</p>
+            <h1 class="mb-1">Welcome back, {{ user.get_full_name|default:user.email }}! 👋</h1>
+            <p class="mb-0 text-white-50">
+                {% if user.role == 'ADMIN' or user.role == 'HR' %}
+                    Enterprise System Overview — Real-time Organization Insights & Analytics
+                {% elif user.role == 'MANAGER' %}
+                    Team Leadership Dashboard — Monitor Subordinate Attendance & Approvals
+                {% else %}
+                    Employee Workplace Dashboard — Track Attendance, Hours & Leave Quotas
+                {% endif %}
+            </p>
         </div>
         <div>
-            <span class="badge bg-light text-primary px-3 py-2 fs-6">Phase 1 Complete</span>
+            <span class="badge bg-light text-primary px-3 py-2 fs-6 shadow-sm">
+                <i class="bi bi-person-badge me-1"></i> Role: {{ user.get_role_display }}
+            </span>
         </div>
     </div>
 </div>
 
+<!-- Dynamic Stat Cards -->
 <div class="row g-4 mb-4">
-    <div class="col-md-3">
-        <div class="card card-stat p-3">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <h6 class="text-muted mb-1 text-uppercase fs-7">Total Employees</h6>
-                    <h3 class="fw-bold mb-0">0</h3>
-                </div>
-                <div class="stat-icon bg-primary-subtle text-primary">
-                    <i class="bi bi-people-fill"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card card-stat p-3">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <h6 class="text-muted mb-1 text-uppercase fs-7">Departments</h6>
-                    <h3 class="fw-bold mb-0">0</h3>
-                </div>
-                <div class="stat-icon bg-success-subtle text-success">
-                    <i class="bi bi-diagram-3-fill"></i>
+    {% if user.role == 'ADMIN' or user.role == 'HR' or user.role == 'MANAGER' %}
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-stat p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1 text-uppercase fs-7 fw-semibold">
+                            {% if user.role == 'MANAGER' %}Direct Reports{% else %}Total Active Employees{% endif %}
+                        </h6>
+                        <h3 class="fw-bold mb-0 text-dark">{{ total_employees }}</h3>
+                        <small class="text-muted">Active staff members</small>
+                    </div>
+                    <div class="stat-icon bg-primary-subtle text-primary">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card card-stat p-3">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <h6 class="text-muted mb-1 text-uppercase fs-7">Present Today</h6>
-                    <h3 class="fw-bold mb-0">0</h3>
-                </div>
-                <div class="stat-icon bg-info-subtle text-info">
-                    <i class="bi bi-clock-history"></i>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-stat p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1 text-uppercase fs-7 fw-semibold">Active Departments</h6>
+                        <h3 class="fw-bold mb-0 text-dark">{{ total_departments }}</h3>
+                        <small class="text-muted">Operational units</small>
+                    </div>
+                    <div class="stat-icon bg-success-subtle text-success">
+                        <i class="bi bi-diagram-3-fill"></i>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card card-stat p-3">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <h6 class="text-muted mb-1 text-uppercase fs-7">Pending Leaves</h6>
-                    <h3 class="fw-bold mb-0">0</h3>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-stat p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1 text-uppercase fs-7 fw-semibold">Present Today</h6>
+                        <h3 class="fw-bold mb-0 text-dark">{{ present_today }}</h3>
+                        <small class="text-muted">Clocked in / Present</small>
+                    </div>
+                    <div class="stat-icon bg-info-subtle text-info">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
                 </div>
-                <div class="stat-icon bg-warning-subtle text-warning">
-                    <i class="bi bi-calendar-check"></i>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-stat p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1 text-uppercase fs-7 fw-semibold">
+                            {% if user.role == 'MANAGER' %}Team Pending Approvals{% else %}Pending Leave Requests{% endif %}
+                        </h6>
+                        <h3 class="fw-bold mb-0 text-dark">{{ pending_leaves }}</h3>
+                        <small class="text-muted">Awaiting decision</small>
+                    </div>
+                    <div class="stat-icon bg-warning-subtle text-warning">
+                        <i class="bi bi-calendar-check-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Employee Personal Stat Cards -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-stat p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1 text-uppercase fs-7 fw-semibold">Today's Status</h6>
+                        {% if today_attendance %}
+                            <h4 class="fw-bold mb-0 text-dark">
+                                <span class="badge badge-status-{{ today_attendance.status|lower }} fs-6">
+                                    {{ today_attendance.get_status_display }}
+                                </span>
+                            </h4>
+                            <small class="text-muted">In: {{ today_attendance.clock_in_time|time:"h:i A"|default:"--" }}</small>
+                        {% else %}
+                            <h4 class="fw-bold mb-0 text-muted fs-6">Not Clocked In</h4>
+                            <small class="text-muted">Pending action</small>
+                        {% endif %}
+                    </div>
+                    <div class="stat-icon bg-primary-subtle text-primary">
+                        <i class="bi bi-person-check-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-stat p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1 text-uppercase fs-7 fw-semibold">Today's Hours</h6>
+                        <h3 class="fw-bold mb-0 text-dark">{{ today_attendance.working_hours|default:"0.00" }} <span class="fs-6 fw-normal text-muted">hrs</span></h3>
+                        <small class="text-muted">Calculated working time</small>
+                    </div>
+                    <div class="stat-icon bg-success-subtle text-success">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-stat p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1 text-uppercase fs-7 fw-semibold">My Pending Leaves</h6>
+                        <h3 class="fw-bold mb-0 text-dark">{{ pending_leaves }}</h3>
+                        <small class="text-muted">Applications in review</small>
+                    </div>
+                    <div class="stat-icon bg-warning-subtle text-warning">
+                        <i class="bi bi-calendar-event-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card card-stat p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1 text-uppercase fs-7 fw-semibold">Leave Types Active</h6>
+                        <h3 class="fw-bold mb-0 text-dark">{{ leave_balances|length }}</h3>
+                        <small class="text-muted">Allocated leave categories</small>
+                    </div>
+                    <div class="stat-icon bg-info-subtle text-info">
+                        <i class="bi bi-wallet2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Charts Grid -->
+<div class="row g-4 mb-4">
+    <!-- Chart 1: Attendance Breakdown / Leave Balances -->
+    <div class="col-lg-4">
+        <div class="card card-stat p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-pie-chart-fill text-primary me-2"></i>
+                    {% if user.role == 'EMPLOYEE' %}My Leave Quota Breakdown{% else %}Today's Attendance Breakdown{% endif %}
+                </h6>
+            </div>
+            <div class="position-relative" style="height: 240px;">
+                <canvas id="attendanceBreakdownChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 2: Department Distribution -->
+    {% if user.role == 'ADMIN' or user.role == 'HR' or user.role == 'MANAGER' %}
+        <div class="col-lg-4">
+            <div class="card card-stat p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-bar-chart-line-fill text-success me-2"></i>
+                        Employees by Department
+                    </h6>
+                </div>
+                <div class="position-relative" style="height: 240px;">
+                    <canvas id="deptDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Employee Leave Balance Summary Cards -->
+        <div class="col-lg-4">
+            <div class="card card-stat p-4 h-100">
+                <h6 class="fw-bold mb-3 text-dark">
+                    <i class="bi bi-card-checklist text-success me-2"></i>My Leave Balances ({{ today_date.year }})
+                </h6>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle table-borderless mb-0">
+                        <thead>
+                            <tr class="border-bottom text-muted fs-7">
+                                <th>Type</th>
+                                <th class="text-end">Used</th>
+                                <th class="text-end">Remaining</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bal in leave_balances %}
+                                <tr class="border-bottom">
+                                    <td class="fw-semibold text-dark">{{ bal.leave_type.name }} ({{ bal.leave_type.code }})</td>
+                                    <td class="text-end text-muted">{{ bal.used_days }} / {{ bal.allocated_days }}</td>
+                                    <td class="text-end fw-bold text-success">{{ bal.remaining_days }} days</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-3 fs-7">No leave balances allocated.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Chart 3: 7-Day Trend -->
+    <div class="col-lg-4">
+        <div class="card card-stat p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-graph-up-arrow text-info me-2"></i>
+                    {% if user.role == 'EMPLOYEE' %}7-Day Working Hours Trend{% else %}7-Day Attendance Trend{% endif %}
+                </h6>
+            </div>
+            <div class="position-relative" style="height: 240px;">
+                <canvas id="attendanceTrendChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tables & Quick Actions Grid -->
+<div class="row g-4">
+    <!-- Main Activity / Requests Table -->
+    <div class="col-lg-8">
+        <div class="card card-stat p-4 h-100">
+            {% if user.role == 'ADMIN' or user.role == 'HR' or user.role == 'MANAGER' %}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-clock-history text-primary me-2"></i>Pending Approvals Overview</h5>
+                    <a href="{% url 'pending_approvals' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-custom align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Leave Type</th>
+                                <th>Dates</th>
+                                <th>Days</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in recent_leave_requests %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold text-dark">{{ req.employee.get_full_name }}</div>
+                                        <div class="fs-7 text-muted">{{ req.employee.employee_id }}</div>
+                                    </td>
+                                    <td><span class="badge bg-light text-dark border">{{ req.leave_type.code }}</span></td>
+                                    <td class="fs-7">{{ req.start_date|date:"M d" }} - {{ req.end_date|date:"M d, Y" }}</td>
+                                    <td class="fw-semibold">{{ req.total_days }}</td>
+                                    <td>
+                                        <a href="{% url 'leave_request_detail' req.pk %}" class="btn btn-sm btn-primary py-0">Review</a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4 fs-7">
+                                        <i class="bi bi-check-circle fs-3 d-block mb-1 text-success opacity-75"></i>
+                                        No pending leave applications requiring approval.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-calendar-event text-primary me-2"></i>My Recent Leave Requests</h5>
+                    <a href="{% url 'leave_apply' %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i> Apply Leave</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-custom align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Leave Type</th>
+                                <th>Dates</th>
+                                <th>Days</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in my_recent_leaves %}
+                                <tr>
+                                    <td class="fw-semibold text-dark">{{ req.leave_type.name }}</td>
+                                    <td class="fs-7">{{ req.start_date|date:"M d" }} - {{ req.end_date|date:"M d, Y" }}</td>
+                                    <td class="fw-semibold">{{ req.total_days }}</td>
+                                    <td>
+                                        <span class="badge badge-status-{{ req.status|lower }}">{{ req.get_status_display }}</span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'leave_request_detail' req.pk %}" class="btn btn-sm btn-outline-secondary py-0">View</a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4 fs-7">
+                                        <i class="bi bi-inbox fs-3 d-block mb-1 opacity-50"></i>
+                                        No leave requests submitted yet.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Actions Sidebar Card -->
+    <div class="col-lg-4">
+        <div class="card card-stat p-4 h-100">
+            <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-rocket-takeoff text-primary me-2"></i>Quick Actions</h5>
+            <div class="d-grid gap-2 mb-4">
+                {% if user.role == 'ADMIN' or user.role == 'HR' %}
+                    <a href="{% url 'employee_create' %}" class="btn btn-outline-primary text-start">
+                        <i class="bi bi-person-plus me-2 text-primary"></i> Add New Employee
+                    </a>
+                    <a href="{% url 'department_create' %}" class="btn btn-outline-success text-start">
+                        <i class="bi bi-folder-plus me-2 text-success"></i> Create Department
+                    </a>
+                    <a href="{% url 'leave_type_create' %}" class="btn btn-outline-warning text-start">
+                        <i class="bi bi-gear me-2 text-warning"></i> Configure Leave Types
+                    </a>
+                {% endif %}
+
+                {% if user.role == 'MANAGER' %}
+                    <a href="{% url 'pending_approvals' %}" class="btn btn-warning text-dark text-start fw-semibold">
+                        <i class="bi bi-check2-square me-2"></i> Review Pending Leaves ({{ pending_leaves }})
+                    </a>
+                    <a href="{% url 'team_attendance' %}" class="btn btn-outline-primary text-start">
+                        <i class="bi bi-people me-2"></i> View Team Attendance
+                    </a>
+                {% endif %}
+
+                <a href="{% url 'attendance_list' %}" class="btn btn-outline-info text-start">
+                    <i class="bi bi-clock me-2"></i>
+                    {% if today_attendance and today_attendance.clock_in_time and not today_attendance.clock_out_time %}
+                        Clock Out Now
+                    {% else %}
+                        Clock In / Attendance Log
+                    {% endif %}
+                </a>
+                <a href="{% url 'leave_apply' %}" class="btn btn-outline-secondary text-start">
+                    <i class="bi bi-file-earmark-plus me-2"></i> Apply for Leave
+                </a>
+            </div>
+
+            <div class="p-3 bg-light rounded border mt-auto">
+                <small class="text-muted d-block fw-semibold mb-1"><i class="bi bi-shield-check text-primary me-1"></i> System Status</small>
+                <div class="d-flex align-items-center justify-content-between fs-7">
+                    <span>EELMS Platform</span>
+                    <span class="badge bg-success-subtle text-success">Operational</span>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row g-4">
-    <div class="col-lg-8">
-        <div class="card card-stat p-4">
-            <h5 class="fw-bold mb-3"><i class="bi bi-shield-check text-primary me-2"></i>Phase 1 Architecture Status</h5>
-            <div class="table-responsive">
-                <table class="table table-hover table-custom align-middle">
-                    <thead>
-                        <tr>
-                            <th>Component</th>
-                            <th>Status</th>
-                            <th>Configuration / Framework</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Django Core Framework</td>
-                            <td><span class="badge bg-success-subtle text-success">Active</span></td>
-                            <td>Django 5.2 (Modular Settings)</td>
-                        </tr>
-                        <tr>
-                            <td>Database Layer</td>
-                            <td><span class="badge bg-success-subtle text-success">Connected</span></td>
-                            <td>PostgreSQL Ready (SQLite Dev Fallback)</td>
-                        </tr>
-                        <tr>
-                            <td>Bootstrap 5 UI & Design</td>
-                            <td><span class="badge bg-success-subtle text-success">Loaded</span></td>
-                            <td>Bootstrap 5.3 + Custom CSS System</td>
-                        </tr>
-                        <tr>
-                            <td>Custom Applications</td>
-                            <td><span class="badge bg-success-subtle text-success">9 Apps Registered</span></td>
-                            <td>Accounts, Employees, Leaves, Attendance, etc.</td>
-                        </tr>
-                        <tr>
-                            <td>API Infrastructure</td>
-                            <td><span class="badge bg-info-subtle text-info">Ready</span></td>
-                            <td>DRF + Swagger UI Spec (/api/docs/)</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-4">
-        <div class="card card-stat p-4">
-            <h5 class="fw-bold mb-3"><i class="bi bi-rocket-takeoff text-primary me-2"></i>Quick Navigation</h5>
-            <div class="d-grid gap-2">
-                <a href="/api/docs/" target="_blank" class="btn btn-outline-primary text-start">
-                    <i class="bi bi-code-square me-2"></i> Open Swagger API Docs
-                </a>
-                <a href="/admin/" target="_blank" class="btn btn-outline-secondary text-start">
-                    <i class="bi bi-key me-2"></i> Django Admin Portal
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Chart JSON Data Scripts -->
+{{ chart_attendance_breakdown|json_script:"attendance-breakdown-data" }}
+{{ chart_dept_distribution|json_script:"dept-distribution-data" }}
+{{ chart_attendance_trend|json_script:"attendance-trend-data" }}
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<!-- Dashboard Script -->
+<script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}
