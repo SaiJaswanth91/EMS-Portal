@@ -50,6 +50,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -207,9 +208,20 @@ if not db_config and use_postgres_flag:
 
 # Priority 5: SQLite fallback
 if not db_config:
+    sqlite_db_path = BASE_DIR / 'db.sqlite3'
+    if os.getenv('VERCEL') or os.getenv('AWS_LAMBDA_FUNCTION_NAME'):
+        tmp_db = Path('/tmp/db.sqlite3')
+        if sqlite_db_path.exists() and not tmp_db.exists():
+            import shutil
+            try:
+                shutil.copy2(sqlite_db_path, tmp_db)
+            except Exception:
+                pass
+        sqlite_db_path = tmp_db
+
     db_config = {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': sqlite_db_path,
     }
 
 DATABASES = {'default': db_config}
@@ -243,6 +255,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Media files (User uploads, profile photos, documents)
 MEDIA_URL = '/media/'

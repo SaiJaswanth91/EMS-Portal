@@ -1,17 +1,30 @@
 from .base import *
 
-DEBUG = False
+DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() in ('true', '1', 'yes')
 
-# Strict host headers in production
-allowed_hosts_raw = os.getenv('DJANGO_ALLOWED_HOSTS', os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1'))
+# Essential reverse proxy SSL header for Vercel deployment
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Host headers configuration for production & Vercel deployments
+allowed_hosts_raw = os.getenv('DJANGO_ALLOWED_HOSTS', os.getenv('ALLOWED_HOSTS', ''))
 ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_raw.split(',') if host.strip()]
 
-# CSRF Trusted Origins in production
+default_hosts = ['.vercel.app', 'localhost', '127.0.0.1', '*']
+for host in default_hosts:
+    if host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(host)
+
+# CSRF Trusted Origins in production & Vercel
 csrf_trusted_raw = os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS', os.getenv('CSRF_TRUSTED_ORIGINS', ''))
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in csrf_trusted_raw.split(',') if origin.strip()]
 
+default_csrf_origins = ['https://*.vercel.app', 'http://localhost:8000', 'http://127.0.0.1:8000']
+for origin in default_csrf_origins:
+    if origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(origin)
+
 # Security headers & cookies
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'True').lower() in ('true', '1', 'yes')
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_HSTS_SECONDS = 31536000 # 1 Year
@@ -50,4 +63,3 @@ LOGGING = {
         },
     },
 }
-
